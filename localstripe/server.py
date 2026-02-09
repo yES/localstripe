@@ -25,8 +25,8 @@ from aiohttp import web
 
 from .resources import BalanceTransaction, Charge, Coupon, Customer, Event, \
     Invoice, InvoiceItem, PaymentIntent, PaymentMethod, Payout, Plan, \
-    Product, Refund, SetupIntent, Source, Subscription, SubscriptionItem, \
-    TaxRate, Token, extra_apis, store
+    Price, Product, Refund, SetupIntent, Source, Subscription, \
+    SubscriptionItem, TaxRate, Token, extra_apis, store
 from .errors import UserError
 from .webhooks import register_webhook
 
@@ -163,14 +163,14 @@ async def auth_middleware(request, handler):
         # where authentication can be done using the public key (passed as
         # `key` in POST data) instead of the private key.
         accept_key_in_post_data = (
-            request.method == 'POST' and
-            any(re.match(pattern, request.path) for pattern in (
-                r'^/v1/tokens$',
-                r'^/v1/sources$',
-                r'^/v1/payment_intents/\w+/_authenticate\b',
-                r'^/v1/setup_intents/\w+/confirm$',
-                r'^/v1/setup_intents/\w+/cancel$',
-            )))
+                request.method == 'POST' and
+                any(re.match(pattern, request.path) for pattern in (
+                    r'^/v1/tokens$',
+                    r'^/v1/sources$',
+                    r'^/v1/payment_intents/\w+/_authenticate\b',
+                    r'^/v1/setup_intents/\w+/confirm$',
+                    r'^/v1/setup_intents/\w+/cancel$',
+                )))
 
         is_auth = get_api_key(request) is not None
 
@@ -274,9 +274,9 @@ for method, url, func in extra_apis:
 
 
 for cls in (BalanceTransaction, Charge, Coupon, Customer, Event, Invoice,
-            InvoiceItem, PaymentIntent, PaymentMethod, Payout, Plan, Product,
-            Refund, SetupIntent, Source, Subscription, SubscriptionItem,
-            TaxRate, Token):
+            InvoiceItem, PaymentIntent, PaymentMethod, Payout, Plan, Price,
+            Product, Refund, SetupIntent, Source, Subscription,
+            SubscriptionItem, TaxRate, Token):
     for method, url, func in (
             ('POST', '/v1/' + cls.object + 's', api_create),
             ('GET', '/v1/' + cls.object + 's/{id}', api_retrieve),

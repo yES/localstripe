@@ -472,11 +472,6 @@ code=$(curl -sg -o /dev/null -w "%{http_code}" -u $SK: \
             $HOST/v1/invoices/upcoming?customer=$cus)
 [ "$code" = 404 ]
 
-code=$(curl -sg -o /dev/null -w "%{http_code}" -u $SK: \
-            $HOST/v1/invoices/create_preview \
-            -d customer=$cus)
-[ "$code" = 404 ]
-
 curl -sSfg -u $SK: $HOST/v1/subscriptions \
      -d customer=$cus \
      -d items[0][plan]=basique-mensuel \
@@ -496,17 +491,6 @@ curl -sSfg -u $SK: $HOST/v1/invoices/upcoming?customer=$cus
 curl -sSfg -u $SK: $HOST/v1/invoices/upcoming?customer=$cus\&subscription_items[0][plan]=pro-annuel\&subscription_tax_percent=20
 
 curl -sSfg -u $SK: $HOST/v1/invoices/upcoming?customer=$cus\&subscription=$sub\&subscription_items[0][id]=si_RBrVStcKDimMnp\&subscription_items[0][plan]=basique-annuel\&subscription_proration_date=1504182686\&subscription_tax_percent=20
-
-curl -sSfg -u $SK: $HOST/v1/invoices/create_preview \
-     -d customer=$cus
-
-curl -sSfg -u $SK: $HOST/v1/invoices/create_preview \
-     -d customer=$cus \
-     -d subscription=$sub \
-     -d subscription_details[default_tax_rates][0]=$txr1 \
-     -d subscription_details[items][0][id]=si_RBrVStcKDimMnp \
-     -d subscription_details[items][0][plan]=basique-annuel \
-     -d subscription_details[proration_date]=1504182686
 
 curl -sSfg -u $SK: $HOST/v1/invoices/$in/lines
 
@@ -1295,3 +1279,24 @@ inv=$(curl -sSfg -u $SK: $HOST/v1/subscriptions \
 total=$(curl -sSfg -u $SK: $HOST/v1/invoices/$inv \
         | grep -oP '"total": \K([0-9]+)' )
 [ "$total" -eq 16383 ]
+
+# Create a price under an existing product.
+curl -sSfg -u $SK: $HOST/v1/prices \
+  -d id=price_abc001 \
+  -d currency=usd \
+  -d unit_amount=1000 \
+  -d recurring[interval]=month \
+  -d product=PRODUCT1234
+
+# Create a price and create a new product as a side-effect.
+curl -sSfg -u $SK: $HOST/v1/prices \
+  -d id=price_abc002 \
+  -d currency=usd \
+  -d unit_amount=10000 \
+  -d recurring[interval]=year \
+  -d product_data[name]=Gold\ Plan
+
+# Subscribe a user to an existing price.
+curl -sSfg -u $SK: $HOST/v1/subscriptions \
+  -d customer=$cus \
+  -d items[0][price]=price_abc001
